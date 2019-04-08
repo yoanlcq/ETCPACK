@@ -53,7 +53,14 @@
 #include <sys/timeb.h>
 #include "image.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#define SH_DEL "del"
+#define SH_MOVE "move"
+#define SH_COPY "copy"
+#else
+#define SH_DEL "rm"
+#define SH_MOVE "mv"
+#define SH_COPY "cp"
 #define _timeb timeb
 #define _ftime ftime
 #endif
@@ -132,13 +139,13 @@ void setupAlphaTable();
 #define BLUE(img,width,x,y)  img[3*(y*width+x)+2]
 
 #define SHIFT(size,startpos) ((startpos)-(size)+1)
-#define MASK(size, startpos) (((2<<(size-1))-1) << SHIFT(size,startpos))
+#define MASK(size, startpos) (((2ull<<(size-1ull))-1ull) << SHIFT(size,startpos))
 #define PUTBITS( dest, data, size, startpos) dest = ((dest & ~MASK(size, startpos)) | ((data << SHIFT(size, startpos)) & MASK(size,startpos)))
 #define SHIFTHIGH(size, startpos) (((startpos)-32)-(size)+1)
-#define MASKHIGH(size, startpos) (((1<<(size))-1) << SHIFTHIGH(size,startpos))
+#define MASKHIGH(size, startpos) (((1ull<<(size))-1ull) << SHIFTHIGH(size,startpos))
 #define PUTBITSHIGH(dest, data, size, startpos) dest = ((dest & ~MASKHIGH(size, startpos)) | ((data << SHIFTHIGH(size, startpos)) & MASKHIGH(size,startpos)))
-#define GETBITS(source, size, startpos)  (( (source) >> ((startpos)-(size)+1) ) & ((1<<(size)) -1))
-#define GETBITSHIGH(source, size, startpos)  (( (source) >> (((startpos)-32)-(size)+1) ) & ((1<<(size)) -1))
+#define GETBITS(source, size, startpos)  (( (source) >> ((startpos)-(size)+1) ) & ((1ull<<(size)) -1ull))
+#define GETBITSHIGH(source, size, startpos)  (( (source) >> (((startpos)-32)-(size)+1) ) & ((1ull<<(size)) -1ull))
 
 // Thumb macros and definitions
 #define	R_BITS59T 4
@@ -303,7 +310,7 @@ int indexConversion(int pixelIndices)
 
 // Tests if a file exists.
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool fileExist(char *filename)
+bool fileExist(const char *filename)
 {
 	FILE *f=NULL;
 	if((f=fopen(filename,"rb"))!=NULL)
@@ -439,7 +446,7 @@ bool expandToHeightDivByFour(uint8 *&img, int width, int height, int &expandedwi
 
 // Find the position of a file extension such as .ppm or .pkm
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-int find_pos_of_extension(char *src)
+int find_pos_of_extension(const char *src)
 {
 	int q=strlen(src);
 	while(q>=0)		// find file name extension
@@ -456,7 +463,7 @@ int find_pos_of_extension(char *src)
 // Read source file. Does conversion if file format is not .ppm.
 // Will expand file to be divisible by four in the x- and y- dimension.
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expandedwidth, int &expandedheight)
+bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &expandedwidth, int &expandedheight)
 {
 	int w1,h1;
 	int wdiv4, hdiv4;
@@ -466,7 +473,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 	// Delete temp file if it exists.
 	if(fileExist("tmp.ppm"))
 	{
-		sprintf(str, "del tmp.ppm\n");
+		sprintf(str, SH_DEL " tmp.ppm\n");
 		system(str);
 	}
 
@@ -474,8 +481,8 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str,"copy %s tmp.ppm \n", filename);
-		printf("Copying source file to tmp.ppm\n", filename);
+		sprintf(str, SH_COPY " %s tmp.ppm \n", filename);
+		printf("Copying `%s` to tmp.ppm\n", filename);
 	}
 	else
 	{
@@ -500,7 +507,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 	{
 		width=w1;
 		height=h1;
-		system("del tmp.ppm");
+		system(SH_DEL " tmp.ppm");
 
 		// Width must be divisible by 4 and height must be
 		// divisible by 4. Otherwise, we will expand the image
@@ -555,7 +562,7 @@ bool readSrcFile(char *filename,uint8 *&img,int &width,int &height, int &expande
 // Reads a file without expanding it to be divisible by 4.
 // Is used when doing PSNR calculation between two files.
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
-bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
+bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height)
 {
 	int w1,h1;
 	char str[255];
@@ -564,7 +571,7 @@ bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
 	// Delete temp file if it exists.
 	if(fileExist("tmp.ppm"))
 	{
-		sprintf(str, "del tmp.ppm\n");
+		sprintf(str, SH_DEL " tmp.ppm\n");
 		system(str);
 	}
 
@@ -573,8 +580,8 @@ bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str,"copy %s tmp.ppm \n", filename);
-		printf("Copying source file to tmp.ppm\n", filename);
+		sprintf(str, SH_COPY " %s tmp.ppm \n", filename);
+		printf("Copying `%s` to tmp.ppm\n", filename);
 	}
 	else
 	{
@@ -596,7 +603,7 @@ bool readSrcFileNoExpand(char *filename,uint8 *&img,int &width,int &height)
 	{
 		width=w1;
 		height=h1;
-		system("del tmp.ppm");
+		system(SH_DEL " tmp.ppm");
 
 		return true;
 	}
@@ -619,7 +626,7 @@ void readArguments(int argc,char *argv[],char* src,char *dst)
 		{
 			if(i==argc-1) 
 			{
-				printf("flag missing argument: %s!\n");
+				printf("flag missing argument: %s!\n", argv[i]);
 				exit(1);
 			}
 			//handle speed flag
@@ -9213,7 +9220,7 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 				if(!(texture_type == ETC1_RGB_NO_MIPMAPS))
 				{
 					printf("\n\n The file %s (of version %c.%c) does not contain a texture of known format.\n", srcfile, version[0],version[1]);
-					printf("Known formats: ETC1_RGB_NO_MIPMAPS.\n", srcfile);
+					printf("Known formats: ETC1_RGB_NO_MIPMAPS.\n");
 					exit(1);
 				}
 			}
@@ -9257,7 +9264,7 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 				if(!(texture_type==ETC2PACKAGE_RGB_NO_MIPMAPS||texture_type==ETC2PACKAGE_sRGB_NO_MIPMAPS||texture_type==ETC2PACKAGE_RGBA_NO_MIPMAPS||texture_type==ETC2PACKAGE_sRGBA_NO_MIPMAPS||texture_type==ETC2PACKAGE_R_NO_MIPMAPS||texture_type==ETC2PACKAGE_RG_NO_MIPMAPS||texture_type==ETC2PACKAGE_RGBA1_NO_MIPMAPS||texture_type==ETC2PACKAGE_sRGBA1_NO_MIPMAPS))
 				{
 					printf("\n\n The file %s does not contain a texture of known format.\n", srcfile);
-					printf("Known formats: ETC2PACKAGE_RGB_NO_MIPMAPS.\n", srcfile);
+					printf("Known formats: ETC2PACKAGE_RGB_NO_MIPMAPS.\n");
 					exit(1);
 				}
 			}
@@ -9477,7 +9484,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 	// Delete destination file if it exists
 	if(fileExist(dstfile))
 	{
-		sprintf(str, "del %s\n",dstfile);	
+		sprintf(str, SH_DEL " %s\n",dstfile);	
 		system(str);
 	}
 
@@ -9485,7 +9492,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 	if(!strcmp(&dstfile[q],".ppm")&&format!=ETC2PACKAGE_R_NO_MIPMAPS) 
 	{
 		// Already a .ppm file. Just rename. 
-		sprintf(str,"move tmp.ppm %s\n",dstfile);
+		sprintf(str, SH_MOVE " tmp.ppm %s\n",dstfile);
 		printf("Renaming destination file to %s\n",dstfile);
 	}
 	else
@@ -9513,7 +9520,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 			fWriteTGAfromRGBandA(dstfile, rw, rh, pixelsRGB, pixelsA, true);
             free(pixelsRGB);
             free(pixelsA);
-            sprintf(str,""); // Nothing to execute.
+            str[0] = '\0'; // Nothing to execute.
 		}
 		else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 		{
