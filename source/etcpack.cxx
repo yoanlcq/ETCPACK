@@ -53,6 +53,11 @@
 #include <sys/timeb.h>
 #include "image.h"
 
+#ifndef _WIN32
+#define _timeb timeb
+#define _ftime ftime
+#endif
+
 // Typedefs
 typedef unsigned char uint8;
 typedef unsigned short uint16;
