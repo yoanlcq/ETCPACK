@@ -57,13 +57,30 @@
 #define SH_DEL "del"
 #define SH_MOVE "move"
 #define SH_COPY "copy"
+#define EXE_EXTENSION ".exe"
 #else
 #define SH_DEL "rm"
 #define SH_MOVE "mv"
 #define SH_COPY "cp"
+#define EXE_EXTENSION ""
 #define _timeb timeb
 #define _ftime ftime
 #endif
+
+static const char* magick()
+{
+	static char buf[4096] = "";
+	if (buf[0])
+		return buf;
+
+	const char* path = getenv("ETCPACK_MAGICK");
+	if (!path)
+		path = "magick" EXE_EXTENSION;
+
+	snprintf(buf, sizeof buf, "%s", path);
+	printf("magick path: `%s`\n", buf);
+	return buf;
+}
 
 // Typedefs
 typedef unsigned char uint8;
@@ -494,7 +511,7 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 		// 
 		// C:\magick convert source.jpg dest.ppm
 		//
-		sprintf(str,"magick convert %s tmp.ppm\n", filename);
+		sprintf(str,"%s convert %s tmp.ppm\n", magick(), filename);
 		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
@@ -593,7 +610,7 @@ bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height
 		// 
 		// C:\magick convert source.jpg dest.ppm
 		//
-		sprintf(str,"magick convert %s tmp.ppm\n", filename);
+		sprintf(str,"%s convert %s tmp.ppm\n", magick(), filename);
 //		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
@@ -9524,12 +9541,12 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 		}
 		else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 		{
-			sprintf(str,"magick convert alphaout.pgm %s\n",dstfile);
+			sprintf(str,"%s convert alphaout.pgm %s\n", magick(), dstfile);
 			printf("Converting destination file from .pgm to %s\n",dstfile);
 		}
 		else 
 		{
-			sprintf(str,"magick convert tmp.ppm %s\n",dstfile);
+			sprintf(str,"%s convert tmp.ppm %s\n", magick(), dstfile);
 			printf("Converting destination file from .ppm to %s\n",dstfile);
 		}
 	}
@@ -15954,7 +15971,7 @@ void compressFile(char *srcfile,char *dstfile)
 			{
 				char str[300];
 				//printf("reading alpha channel....");
-				sprintf(str,"magick convert %s -alpha extract alpha.pgm\n",srcfile);
+				sprintf(str,"%s convert %s -alpha extract alpha.pgm\n", magick(), srcfile);
 				system(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
 				printf("ok!\n");
@@ -15963,7 +15980,7 @@ void compressFile(char *srcfile,char *dstfile)
 			else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 			{
 				char str[300];
-				sprintf(str,"magick convert %s alpha.pgm\n",srcfile);
+				sprintf(str,"%s convert %s alpha.pgm\n", magick(), srcfile);
 				system(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
 				printf("read alpha ok, size is %d,%d (%d,%d)",width,height,extendedwidth,extendedheight);
