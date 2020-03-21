@@ -1,4 +1,10 @@
-EXE:=bin/etcpack.exe
+ifeq ($(OS),Windows_NT)
+EXE_EXTENSION:=.exe
+else
+EXE_EXTENSION:=
+endif
+
+EXE:=bin/etcpack$(EXE_EXTENSION)
 
 .PHONY: all clean re
 all: $(EXE)
