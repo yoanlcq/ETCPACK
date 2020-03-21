@@ -113,7 +113,7 @@ static const char* tmp_ppm() {
 	if (buf[0])
 		return buf;
 
-	format_unique_path(buf, sizeof buf, "tmp.ppm";
+	format_unique_path(buf, sizeof buf, "tmp.ppm");
 	return buf;
 }
 
