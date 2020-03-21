@@ -67,6 +67,14 @@
 #define _ftime ftime
 #endif
 
+static void delete_file(const char* path) {
+	char str[4096];
+	sprintf(str, SH_DEL " %s\n", path);
+	system(str);
+}
+
+static const char* MAGICK_EXE_DEFAULT = "magick" EXE_EXTENSION;
+
 static const char* magick()
 {
 	static char buf[4096] = "";
@@ -75,12 +83,59 @@ static const char* magick()
 
 	const char* path = getenv("ETCPACK_MAGICK");
 	if (!path)
-		path = "magick" EXE_EXTENSION;
+		path = MAGICK_EXE_DEFAULT;
 
 	snprintf(buf, sizeof buf, "%s", path);
 	printf("magick path: `%s`\n", buf);
 	return buf;
 }
+
+static const char* get_unique_folder_path() {
+	static char buf[4096] = "";
+	if (buf[0])
+		return buf;
+
+	const char* path = getenv("ETCPACK_TMPDIR");
+	if (!path)
+		path = "";
+
+	snprintf(buf, sizeof buf, "%s%s", path, path[0] ? "/" : "");
+	printf("unique folder path: `%s`\n", buf);
+	return buf;
+}
+
+static void format_unique_path(char* buf, size_t buf_capacity, const char* filename) {
+	snprintf(buf, buf_capacity, "%s%s", get_unique_folder_path(), filename);
+}
+
+static const char* tmp_ppm() {
+	static char buf[4096] = "";
+	if (buf[0])
+		return buf;
+
+	format_unique_path(buf, sizeof buf, tmp_ppm());
+	return buf;
+}
+
+static const char* alpha_pgm() {
+	static char buf[4096] = "";
+	if (buf[0])
+		return buf;
+
+	format_unique_path(buf, sizeof buf, alpha_pgm());
+	return buf;
+}
+
+static const char* alphaout_pgm()
+{
+	static char buf[4096] = "";
+	if (buf[0])
+		return buf;
+
+	format_unique_path(buf, sizeof buf, alphaout_pgm());
+	return buf;
+}
+
 
 // Typedefs
 typedef unsigned char uint8;
@@ -488,9 +543,9 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 
 
 	// Delete temp file if it exists.
-	if(fileExist("tmp.ppm"))
+	if(fileExist(tmp_ppm()))
 	{
-		sprintf(str, SH_DEL " tmp.ppm\n");
+		sprintf(str, SH_DEL " %s\n", tmp_ppm());
 		system(str);
 	}
 
@@ -498,8 +553,8 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str, SH_COPY " %s tmp.ppm \n", filename);
-		printf("Copying `%s` to tmp.ppm\n", filename);
+		sprintf(str, SH_COPY " %s %s\n", filename, tmp_ppm());
+		printf("Copying `%s` to %s\n", filename, tmp_ppm());
 	}
 	else
 	{
@@ -511,7 +566,7 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 		// 
 		// C:\magick convert source.jpg dest.ppm
 		//
-		sprintf(str,"%s convert %s tmp.ppm\n", magick(), filename);
+		sprintf(str,"%s convert %s %s\n", magick(), filename, tmp_ppm());
 		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
@@ -520,11 +575,11 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 	int bitrate=8;
 	if(format==ETC2PACKAGE_RG_NO_MIPMAPS)
 		bitrate=16;
-	if(fReadPPM("tmp.ppm",w1,h1,img,bitrate))
+	if(fReadPPM(tmp_ppm(),w1,h1,img,bitrate))
 	{
 		width=w1;
 		height=h1;
-		system(SH_DEL " tmp.ppm");
+		delete_file(tmp_ppm());
 
 		// Width must be divisible by 4 and height must be
 		// divisible by 4. Otherwise, we will expand the image
@@ -569,7 +624,7 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 	}
 	else
 	{
-		printf("Could not read tmp.ppm file\n");
+		printf("Could not read %s file\n", tmp_ppm());
 		exit(1);	
 	}
 	return false;
@@ -586,9 +641,9 @@ bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height
 
 
 	// Delete temp file if it exists.
-	if(fileExist("tmp.ppm"))
+	if(fileExist(tmp_ppm()))
 	{
-		sprintf(str, SH_DEL " tmp.ppm\n");
+		sprintf(str, SH_DEL " %s\n", tmp_ppm());
 		system(str);
 	}
 
@@ -597,8 +652,8 @@ bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height
 	if(!strcmp(&filename[q],".ppm")) 
 	{
 		// Already a .ppm file. Just copy. 
-		sprintf(str, SH_COPY " %s tmp.ppm \n", filename);
-		printf("Copying `%s` to tmp.ppm\n", filename);
+		sprintf(str, SH_COPY " %s %s\n", filename, tmp_ppm());
+		printf("Copying `%s` to %s\n", filename, tmp_ppm());
 	}
 	else
 	{
@@ -610,20 +665,20 @@ bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height
 		// 
 		// C:\magick convert source.jpg dest.ppm
 		//
-		sprintf(str,"%s convert %s tmp.ppm\n", magick(), filename);
+		sprintf(str,"%s convert %s %s\n", magick(), filename, tmp_ppm());
 //		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
 	system(str);
 
-	if(fReadPPM("tmp.ppm",w1,h1,img,8))
+	if(fReadPPM(tmp_ppm(),w1,h1,img,8))
 	{
 		width=w1;
 		height=h1;
-		system(SH_DEL " tmp.ppm");
-
+		delete_file(tmp_ppm());
 		return true;
 	}
+
 	return false;
 }
 
@@ -8542,7 +8597,7 @@ void readAlpha(uint8* &data, int &width, int &height, int &extendedwidth, int &e
 		printf("invalid format for alpha reading!\n");
 		exit(1);
 	}
-	fReadPGM("alpha.pgm",width,height,tempdata,wantedBitDepth);
+	fReadPGM(alpha_pgm(),width,height,tempdata,wantedBitDepth);
 	extendedwidth=4*((width+3)/4);
 	extendedheight=4*((height+3)/4);
 
@@ -9486,17 +9541,17 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 
 	if(format!=ETC2PACKAGE_R_NO_MIPMAPS&&format!=ETC2PACKAGE_RG_NO_MIPMAPS) 
 	{
-		fWritePPM("tmp.ppm",width,height,img,8,false);
-		printf("Saved file tmp.ppm \n\n");
+		fWritePPM(tmp_ppm(),width,height,img,8,false);
+		printf("Saved file %s\n\n", tmp_ppm());
 	}
 	else if(format==ETC2PACKAGE_RG_NO_MIPMAPS) 
 	{
-		fWritePPM("tmp.ppm",width,height,img,16,false);
+		fWritePPM(tmp_ppm(),width,height,img,16,false);
 	}
 	if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS)
-		fWritePGM("alphaout.pgm",width,height,alphaimg,false,8);
+		fWritePGM(alphaout_pgm(),width,height,alphaimg,false,8);
 	if(format==ETC2PACKAGE_R_NO_MIPMAPS)
-		fWritePGM("alphaout.pgm",width,height,alphaimg,false,16);
+		fWritePGM(alphaout_pgm(),width,height,alphaimg,false,16);
 
 	// Delete destination file if it exists
 	if(fileExist(dstfile))
@@ -9509,7 +9564,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 	if(!strcmp(&dstfile[q],".ppm")&&format!=ETC2PACKAGE_R_NO_MIPMAPS) 
 	{
 		// Already a .ppm file. Just rename. 
-		sprintf(str, SH_MOVE " tmp.ppm %s\n",dstfile);
+		sprintf(str, SH_MOVE " %s %s\n", tmp_ppm(), dstfile);
 		printf("Renaming destination file to %s\n",dstfile);
 	}
 	else
@@ -9525,15 +9580,15 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 		if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
 		{
             // Somewhere after version 6.7.1-2 of ImageMagick the following command gives the wrong result due to a bug. 
-			// sprintf(str,"composite -compose CopyOpacity alphaout.pgm tmp.ppm %s\n",dstfile);
+			// sprintf(str,"composite -compose CopyOpacity %s %s %s\n", alphaout_pgm(), tmp_ppm(), dstfile);
             // Instead we read the file and write a tga.
 
 			printf("Converting destination file from .ppm/.pgm to %s with alpha\n",dstfile);
             int rw, rh;
             unsigned char *pixelsRGB;
             unsigned char *pixelsA;
-			fReadPPM("tmp.ppm", rw, rh, pixelsRGB, 8);
-            fReadPGM("alphaout.pgm", rw, rh, pixelsA, 8);
+			fReadPPM(tmp_ppm(), rw, rh, pixelsRGB, 8);
+            fReadPGM(alphaout_pgm(), rw, rh, pixelsA, 8);
 			fWriteTGAfromRGBandA(dstfile, rw, rh, pixelsRGB, pixelsA, true);
             free(pixelsRGB);
             free(pixelsA);
@@ -9541,12 +9596,12 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 		}
 		else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 		{
-			sprintf(str,"%s convert alphaout.pgm %s\n", magick(), dstfile);
+			sprintf(str,"%s convert %s %s\n", magick(), alphaout_pgm(), dstfile);
 			printf("Converting destination file from .pgm to %s\n",dstfile);
 		}
 		else 
 		{
-			sprintf(str,"%s convert tmp.ppm %s\n", magick(), dstfile);
+			sprintf(str,"%s convert %s %s\n", magick(), tmp_ppm(), dstfile);
 			printf("Converting destination file from .ppm to %s\n",dstfile);
 		}
 	}
@@ -15971,7 +16026,7 @@ void compressFile(char *srcfile,char *dstfile)
 			{
 				char str[300];
 				//printf("reading alpha channel....");
-				sprintf(str,"%s convert %s -alpha extract alpha.pgm\n", magick(), srcfile);
+				sprintf(str,"%s convert %s -alpha extract %s\n", magick(), srcfile, alpha_pgm());
 				system(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
 				printf("ok!\n");
@@ -15980,7 +16035,7 @@ void compressFile(char *srcfile,char *dstfile)
 			else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 			{
 				char str[300];
-				sprintf(str,"%s convert %s alpha.pgm\n", magick(), srcfile);
+				sprintf(str,"%s convert %s %s\n", magick(), srcfile, alpha_pgm());
 				system(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
 				printf("read alpha ok, size is %d,%d (%d,%d)",width,height,extendedwidth,extendedheight);
@@ -16096,6 +16151,10 @@ int main(int argc,char *argv[])
 		printf("                                         (1 equals punchthrough)\n");
 		printf("                                         (default: RGB)\n");
 		printf("      -v {on|off}                        Detailed progress info. (default on)\n");
+		printf("                                                            \n");
+		printf("(Optional) Environment variables: \n");
+		printf("  ETCPACK_MAGICK=path/to/magick.exe      Path to the `magick` executable. By default it is %s\n", MAGICK_EXE_DEFAULT);
+		printf("  ETCPACK_TMPDIR=/tmp                    Path to a directory where temporary artifacts should be placed. By default, the current working directory is used.\n");
 		printf("                                                            \n");
 		printf("Examples: \n");
 		printf("  etcpack img.ppm img.pkm                Compresses img.ppm to img.pkm in\n"); 
