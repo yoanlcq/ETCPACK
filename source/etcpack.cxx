@@ -113,7 +113,7 @@ static const char* tmp_ppm() {
 	if (buf[0])
 		return buf;
 
-	format_unique_path(buf, sizeof buf, tmp_ppm());
+	format_unique_path(buf, sizeof buf, "tmp.ppm";
 	return buf;
 }
 
@@ -122,7 +122,7 @@ static const char* alpha_pgm() {
 	if (buf[0])
 		return buf;
 
-	format_unique_path(buf, sizeof buf, alpha_pgm());
+	format_unique_path(buf, sizeof buf, "alpha.pgm");
 	return buf;
 }
 
@@ -132,7 +132,7 @@ static const char* alphaout_pgm()
 	if (buf[0])
 		return buf;
 
-	format_unique_path(buf, sizeof buf, alphaout_pgm());
+	format_unique_path(buf, sizeof buf, "alphaout.pgm");
 	return buf;
 }
 
