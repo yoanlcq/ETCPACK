@@ -58,11 +58,13 @@
 #define SH_MOVE "move"
 #define SH_COPY "copy"
 #define EXE_EXTENSION ".exe"
+#define PATH_SEPARATOR "\\"
 #else
 #define SH_DEL "rm"
 #define SH_MOVE "mv"
 #define SH_COPY "cp"
 #define EXE_EXTENSION ""
+#define PATH_SEPARATOR "/"
 #define _timeb timeb
 #define _ftime ftime
 #endif
@@ -75,8 +77,7 @@ static void delete_file(const char* path) {
 
 static const char* MAGICK_EXE_DEFAULT = "magick" EXE_EXTENSION;
 
-static const char* magick()
-{
+static const char* magick() {
 	static char buf[4096] = "";
 	if (buf[0])
 		return buf;
@@ -99,7 +100,7 @@ static const char* get_unique_folder_path() {
 	if (!path)
 		path = "";
 
-	snprintf(buf, sizeof buf, "%s%s", path, path[0] ? "/" : "");
+	snprintf(buf, sizeof buf, "%s%s", path, path[0] ? PATH_SEPARATOR : "");
 	printf("unique folder path: `%s`\n", buf);
 	return buf;
 }
@@ -126,8 +127,7 @@ static const char* alpha_pgm() {
 	return buf;
 }
 
-static const char* alphaout_pgm()
-{
+static const char* alphaout_pgm() {
 	static char buf[4096] = "";
 	if (buf[0])
 		return buf;
