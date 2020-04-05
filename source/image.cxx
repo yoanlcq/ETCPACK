@@ -109,7 +109,7 @@ bool fReadPPM(const char *filename, int &width, int &height, unsigned char *&pix
 
 	if(f1)
 	{
-		char line[255];
+		char line[1024];
 
 		removeSpaces(f1);
 		removeComments(f1);
@@ -305,7 +305,7 @@ int fReadPGM(const char *filename, int &width, int &height, unsigned char *&pixe
 	f=etcpack_fopen(filename,"rb");
 	if(f)
 	{
-		char str[100];
+		char str[1024];
 		removeSpaces(f);
 		removeComments(f);
 		removeSpaces(f);

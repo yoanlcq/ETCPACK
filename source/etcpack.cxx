@@ -9543,7 +9543,7 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 // NO WARRANTY --- SEE STATEMENT IN TOP OF FILE (C) Ericsson AB 2005-2013. All Rights Reserved.
 void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int height) 
 {
-	char str[300];
+	char str[4096];
 
 	if(format!=ETC2PACKAGE_R_NO_MIPMAPS&&format!=ETC2PACKAGE_RG_NO_MIPMAPS) 
 	{
@@ -16030,7 +16030,7 @@ void compressFile(char *srcfile,char *dstfile)
 			uint8* alphaimg=NULL;
 			if(format==ETC2PACKAGE_RGBA_NO_MIPMAPS||format==ETC2PACKAGE_RGBA1_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA_NO_MIPMAPS||format==ETC2PACKAGE_sRGBA1_NO_MIPMAPS) 
 			{
-				char str[300];
+				char str[4096];
 				//printf("reading alpha channel....");
 				sprintf(str,"%s convert %s -alpha extract %s\n", magick(), srcfile, alpha_pgm());
 				execute_system_command(str);
@@ -16040,11 +16040,11 @@ void compressFile(char *srcfile,char *dstfile)
 			}
 			else if(format==ETC2PACKAGE_R_NO_MIPMAPS) 
 			{
-				char str[300];
+				char str[4096];
 				sprintf(str,"%s convert %s %s\n", magick(), srcfile, alpha_pgm());
 				execute_system_command(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
-				printf("read alpha ok, size is %d,%d (%d,%d)",width,height,extendedwidth,extendedheight);
+				printf("read alpha ok, size is %d,%d (%d,%d)\n",width,height,extendedwidth,extendedheight);
 				setupAlphaTableAndValtab();
 			}
 			printf("Compressing...\n");
@@ -16108,8 +16108,8 @@ int main(int argc,char *argv[])
 	if(argc==3 || argc==4 || argc == 5 || argc == 7 || argc == 9 || argc == 11 || argc == 13)
 	{
 		// The source file is always the second last one. 
-		char srcfile[200];
-		char dstfile[200];
+		char srcfile[4096];
+		char dstfile[4096];
 		readArguments(argc,argv,srcfile,dstfile);
 		
 		int q = find_pos_of_extension(srcfile);
