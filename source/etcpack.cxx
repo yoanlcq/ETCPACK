@@ -52,6 +52,7 @@
 #include <time.h>
 #include <sys/timeb.h>
 #include "image.h"
+#include "misc.h"
 
 #ifdef _WIN32
 #define SH_DEL "del"
@@ -390,7 +391,7 @@ int indexConversion(int pixelIndices)
 bool fileExist(const char *filename)
 {
 	FILE *f=NULL;
-	if((f=fopen(filename,"rb"))!=NULL)
+	if((f=etcpack_fopen(filename,"rb"))!=NULL)
 	{
 		fclose(f);
 		return true;
@@ -9200,7 +9201,7 @@ void uncompressFile(char *srcfile, uint8* &img, uint8 *&alphaimg, int& active_wi
 	unsigned char magic[4];
 	unsigned char version[2];
 	unsigned short texture_type;
-	if(f=fopen(srcfile,"rb"))
+	if(f=etcpack_fopen(srcfile,"rb"))
 	{
 		// Load table
 		readCompressParams();
@@ -15659,7 +15660,7 @@ void compressImageFile(uint8 *img, uint8 *alphaimg,int width,int height,char *ds
 		version[0] = '1'; version[1] = '0';
 	}
 
-	if(f=fopen(dstfile,"wb"))
+	if(f=etcpack_fopen(dstfile,"wb"))
 	{
 		w=expandedwidth/4;  w*=4;
 		h=expandedheight/4; h*=4;

@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "image.h"
+#include "misc.h"
 
 // Remove warnings for unsafe functions such as strcpy
 #pragma warning(disable : 4996)
@@ -104,7 +105,7 @@ bool fReadPPM(const char *filename, int &width, int &height, unsigned char *&pix
 {
 	FILE *f1;
 	int maximum;
-	f1 = fopen(filename, "rb");
+	f1 = etcpack_fopen(filename, "rb");
 
 	if(f1)
 	{
@@ -229,7 +230,7 @@ bool fReadPPM(const char *filename, int &width, int &height, unsigned char *&pix
 bool fWritePPM(const char *filename, int width, int height, unsigned char *pixels, int bitrate, bool reverse_y)
 {
 	FILE *fsave;
-	fsave = fopen(filename, "wb");
+	fsave = etcpack_fopen(filename, "wb");
 	int max = (1<<bitrate)-1;
 	int fac = bitrate/8;
 	if(fsave)
@@ -260,7 +261,7 @@ bool fWritePPM(const char *filename, int width, int height, unsigned char *pixel
 bool fWritePGM(const char *filename, int width, int height, unsigned char *pixels,bool reverse_y, int bitdepth)
 {
    FILE *f;
-   f=fopen(filename,"wb");
+   f=etcpack_fopen(filename,"wb");
    if(f)
    {
       int q;
@@ -301,7 +302,7 @@ int fReadPGM(const char *filename, int &width, int &height, unsigned char *&pixe
 	FILE *f;
 	int colres;
 	int bitdepth=8;
-	f=fopen(filename,"rb");
+	f=etcpack_fopen(filename,"rb");
 	if(f)
 	{
 		char str[100];
@@ -400,7 +401,7 @@ bool fWriteTGAfromRGBandA(const char *filename, int width, int height, unsigned 
 {
 	FILE *f1;
 
-	if( (f1 = fopen(filename,"wb")) == NULL)
+	if( (f1 = etcpack_fopen(filename,"wb")) == NULL)
 	{
 		return false;
 	}
