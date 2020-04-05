@@ -69,10 +69,15 @@
 #define _ftime ftime
 #endif
 
+int execute_system_command(const char* cmd) {
+	printf("Running command `%s`\n", cmd);
+	return system(cmd);
+}
+
 static void delete_file(const char* path) {
 	char str[4096];
 	sprintf(str, SH_DEL " %s\n", path);
-	system(str);
+	execute_system_command(str);
 }
 
 static const char* MAGICK_EXE_DEFAULT = "magick" EXE_EXTENSION;
@@ -546,7 +551,7 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 	if(fileExist(tmp_ppm()))
 	{
 		sprintf(str, SH_DEL " %s\n", tmp_ppm());
-		system(str);
+		execute_system_command(str);
 	}
 
 	int q = find_pos_of_extension(filename);
@@ -570,7 +575,7 @@ bool readSrcFile(const char *filename,uint8 *&img,int &width,int &height, int &e
 		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
-	system(str);
+	execute_system_command(str);
 
 	int bitrate=8;
 	if(format==ETC2PACKAGE_RG_NO_MIPMAPS)
@@ -644,7 +649,7 @@ bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height
 	if(fileExist(tmp_ppm()))
 	{
 		sprintf(str, SH_DEL " %s\n", tmp_ppm());
-		system(str);
+		execute_system_command(str);
 	}
 
 
@@ -669,7 +674,7 @@ bool readSrcFileNoExpand(const char *filename,uint8 *&img,int &width,int &height
 //		printf("Converting source file from %s to .ppm\n", filename);
 	}
 	// Execute system call
-	system(str);
+	execute_system_command(str);
 
 	if(fReadPPM(tmp_ppm(),w1,h1,img,8))
 	{
@@ -9557,7 +9562,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 	if(fileExist(dstfile))
 	{
 		sprintf(str, SH_DEL " %s\n",dstfile);	
-		system(str);
+		execute_system_command(str);
 	}
 
 	int q = find_pos_of_extension(dstfile);
@@ -9606,7 +9611,7 @@ void writeOutputFile(char *dstfile, uint8* img, uint8* alphaimg, int width, int 
 		}
 	}
 	// Execute system call
-	system(str);
+	execute_system_command(str);
 	
 	free(img);
 	if(alphaimg!=NULL)
@@ -16027,7 +16032,7 @@ void compressFile(char *srcfile,char *dstfile)
 				char str[300];
 				//printf("reading alpha channel....");
 				sprintf(str,"%s convert %s -alpha extract %s\n", magick(), srcfile, alpha_pgm());
-				system(str);
+				execute_system_command(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
 				printf("ok!\n");
 				setupAlphaTableAndValtab();
@@ -16036,7 +16041,7 @@ void compressFile(char *srcfile,char *dstfile)
 			{
 				char str[300];
 				sprintf(str,"%s convert %s %s\n", magick(), srcfile, alpha_pgm());
-				system(str);
+				execute_system_command(str);
 				readAlpha(alphaimg,width,height,extendedwidth,extendedheight);
 				printf("read alpha ok, size is %d,%d (%d,%d)",width,height,extendedwidth,extendedheight);
 				setupAlphaTableAndValtab();
